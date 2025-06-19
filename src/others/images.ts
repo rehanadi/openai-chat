@@ -1,4 +1,4 @@
-import { writeFileSync } from "fs"
+import { createReadStream, writeFileSync } from "fs"
 import OpenAI from "openai"
 
 const openai = new OpenAI()
@@ -16,7 +16,7 @@ const generateFreeImage = async () => {
   console.log(response)
 }
 
-const saveFreeImage = async () => {
+const generateFreeLocalImage = async () => {
   const response = await openai.images.generate({
     prompt: "A photo of a cat on a mat",
     model: "dall-e-2",
@@ -33,7 +33,7 @@ const saveFreeImage = async () => {
   }
 }
 
-const saveAdvanceImage = async () => {
+const generateAdvanceImage = async () => {
   const response = await openai.images.generate({
     prompt: "Photo of a city at night with skyscrapers",
     model: "dall-e-3",
@@ -54,6 +54,47 @@ const saveAdvanceImage = async () => {
   }
 }
 
+const generateImageVariation = async () => {
+  const response = await openai.images.createVariation({
+    image: createReadStream("public/images/cityNight.png"),
+    model: "dall-e-2",
+    response_format: "b64_json",
+    n: 1,
+  })
+
+  const rawImage =
+    response.data && response.data[0] ? response.data[0].b64_json : undefined
+
+  if (rawImage) {
+    writeFileSync(
+      "public/images/cityNightVariation.png",
+      Buffer.from(rawImage, "base64")
+    )
+  }
+}
+
+const editImage = async () => {
+  const response = await openai.images.edit({
+    image: createReadStream("public/images/cityNight.png"),
+    mask: createReadStream("public/images/cityNightMask.png"),
+    prompt: "Add thunderstorm to the sky",
+    model: "dall-e-2",
+    response_format: "b64_json",
+    n: 1,
+  })
+
+  const rawImage =
+    response.data && response.data[0] ? response.data[0].b64_json : undefined
+
+  if (rawImage) {
+    writeFileSync(
+      "public/images/cityNightEdited.png",
+      Buffer.from(rawImage, "base64")
+    )
+  }
+}
 // generateFreeImage()
-// saveFreeImage()
-saveAdvanceImage()
+// generateFreeLocalImage()
+// generateAdvanceImage()
+// generateImageVariation()
+editImage()
